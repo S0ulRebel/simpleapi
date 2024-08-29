@@ -1,0 +1,28 @@
+linters-settings:
+  govet:
+    check-shadowing: true
+  goconst:
+    min-len: 3
+    min-occurrences: 2
+
+linters:
+  enable:
+    - errcheck
+    - govet
+    - goconst
+    - gofmt
+    - staticcheck
+  disable:
+    - dupl
+
+issues:
+  exclude-rules:
+    - linters:
+        - errcheck
+      text: "context\\.Context"
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+run:
+  timeout: 5m
+  tests: false

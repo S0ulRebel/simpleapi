@@ -1,0 +1,28 @@
+@startuml
+
+abstract class Enemy {
+    +health: Number
+    +attack(): void // abstract
+}
+
+class Swordsman extends Enemy {
+    +attack(): void
+}
+
+class Archer extends Enemy {
+    +attack(): void
+}
+
+class Mage extends Enemy {
+    +attack(): void
+}
+
+class EnemyFactory {
+    +create(type: String): Enemy
+}
+
+EnemyFactory -- Swordsman
+EnemyFactory -- Archer
+EnemyFactory -- Mage
+
+@enduml
