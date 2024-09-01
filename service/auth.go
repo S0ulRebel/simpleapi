@@ -2,6 +2,7 @@ package service
 
 import (
 	"os"
+	"simple-api/errors"
 	"simple-api/repository"
 	"time"
 
@@ -13,21 +14,20 @@ type AuthService struct {
 	UserRepo repository.UserRepository
 }
 
-func (s AuthService) Login(email, password string) (string, error) {
-	user, err := s.UserRepo.GetUserByEmail(email)
-	if err != nil {
-		// c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
-		return "", err
+func (s AuthService) Login(email, password string) (string, *errors.AppError) {
+	user, appErr := s.UserRepo.GetUserByEmail(email)
+	if appErr != nil {
+		return "", errors.NewErrorService().Unauthorized(errors.INVALID_EMAIL_OR_PASSWORD)
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
-		// c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
-		return "", err
+		// Return a specific unauthorized error for incorrect password
+		return "", errors.NewErrorService().Unauthorized(errors.INVALID_EMAIL_OR_PASSWORD)
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": user.ID,
+		"ID":  user.ID,
 		"exp": time.Now().Add(time.Hour * 24 * 30).Unix(),
 	})
 
@@ -35,7 +35,7 @@ func (s AuthService) Login(email, password string) (string, error) {
 
 	if err != nil {
 		// c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return "", err
+		return "", errors.NewErrorService().InternalServerError(err)
 	}
 
 	return tokenString, nil

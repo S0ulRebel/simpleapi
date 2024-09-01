@@ -26,6 +26,9 @@ func main() {
 	// Initialize handlers
 	handlers := handler.NewHandlerManager(*services)
 	// Register routes
-	route.RegisterRoutes(router, *handlers)
-	router.Run(":8080")
+	route.RegisterRoutes(router, *handlers, *services)
+	err := router.Run(":8080")
+	if err != nil {
+		fmt.Println(err)
+	}
 }

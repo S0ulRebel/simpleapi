@@ -2,69 +2,88 @@ package middleware
 
 import (
 	"fmt"
-	"net/http"
 	"os"
+	"simple-api/errors"
 	"simple-api/model"
-	"simple-api/initializer"
+	"simple-api/service"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func RequireAuth(c *gin.Context) {
-	tokenString, err := c.Cookie("Authorization")
-	if err != nil {
-		c.AbortWithStatus(http.StatusUnauthorized)
-		return
-	}
-
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		// Don't forget to validate the alg is what you expect:
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
-		}
-
-		// hmacSampleSecret is a []byte containing your secret, e.g. []byte("my_secret_key")
-		return []byte(os.Getenv("SECRET")), nil
-	})
-
-	if err != nil {
-		c.AbortWithStatus(http.StatusUnauthorized)
-		return
-	}
-
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		exp, ok := claims["exp"].(float64)
-		if !ok {
-			fmt.Println("Error extracting exp claim")
-			c.AbortWithStatus(http.StatusUnauthorized)
-			return
-		}
-		if exp < float64(time.Now().Unix()) {
-			fmt.Println("Token has expired")
-			c.AbortWithStatus(http.StatusUnauthorized)
+func RequireAuth(userService service.UserService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tokenString, tokenStringErr := c.Cookie("Authorization")
+		if tokenStringErr != nil {
+			handleAuthError(c, "No token provided")
 			return
 		}
 
-		id, ok := claims["sub"].(float64)
-		if !ok {
-			fmt.Println("Error extracting id claim")
-			c.AbortWithStatus(http.StatusUnauthorized)
+		token, tokenErr := parseToken(tokenString)
+		if tokenErr != nil {
+			handleAuthError(c, "Unexpected token signing method")
 			return
 		}
 
-		var user model.User
-		if err := initializer.PGDB.First(&user, int(id)).Error; err != nil {
-			fmt.Println("Error fetching user from database:", err)
-			c.AbortWithStatus(http.StatusUnauthorized)
+		claims, valid := token.Claims.(jwt.MapClaims)
+		if !valid || !token.Valid {
+			handleAuthError(c, "Invalid token or claims")
+			return
+		}
+
+		if claimsErr := validateClaims(claims); claimsErr != nil {
+			handleAuthError(c, claimsErr.Error())
+			return
+		}
+
+		user, userErr := getUserByClaims(claims, userService)
+		if userErr != nil {
+			handleAuthError(c, "Error extracting ID claim")
 			return
 		}
 
 		c.Set("user", user)
 		c.Next()
-	} else {
-		fmt.Println("Invalid token or claims")
-		c.AbortWithStatus(http.StatusUnauthorized)
 	}
+}
+
+func handleAuthError(c *gin.Context, message string) {
+	appErr := errors.NewErrorService().Unauthorized(message)
+	c.JSON(appErr.Code, gin.H{"error": appErr.Error()})
+	c.Abort()
+}
+
+func parseToken(tokenString string) (*jwt.Token, error) {
+	return jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(os.Getenv("SECRET")), nil
+	})
+}
+
+func validateClaims(claims jwt.MapClaims) error {
+	exp, ok := claims["exp"].(float64)
+	if !ok {
+		return fmt.Errorf("Error extracting expiration claim")
+	}
+	if exp < float64(time.Now().Unix()) {
+		return fmt.Errorf("Token expired")
+	}
+
+	_, ok = claims["ID"].(float64)
+	if !ok {
+		return fmt.Errorf("Error extracting ID claim")
+	}
+
+	return nil
+}
+
+func getUserByClaims(claims jwt.MapClaims, userService service.UserService) (model.User, *errors.AppError) {
+	id, ok := claims["ID"].(float64)
+	if !ok {
+		return model.User{}, errors.NewErrorService().Unauthorized("")
+	}
+	return userService.GetUserByID(int(id))
 }

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"simple-api/errors"
 	"simple-api/model"
 	"simple-api/service"
 	"strconv"
@@ -21,7 +22,12 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 		Password  string
 	}
 
-	c.BindJSON(&body)
+	err := c.BindJSON(&body)
+	if err != nil {
+		appErr := errors.NewErrorService().BadRequest(errors.INVALID_REQUEST_BODY)
+		c.JSON(appErr.Code, gin.H{"error": appErr.Error()})
+		return
+	}
 
 	user := model.User{
 		FirstName: body.FirstName,
@@ -30,9 +36,9 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 		Password:  body.Password,
 	}
 
-	createdUser, err := h.UserService.CreateUser(user)
-	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+	createdUser, createdUserErr := h.UserService.CreateUser(user)
+	if createdUserErr != nil {
+		c.JSON(createdUserErr.Code, gin.H{"error": createdUserErr.Error()})
 		return
 	}
 	c.JSON(201, createdUser)
@@ -48,32 +54,36 @@ func (h *UserHandler) GetUsers(c *gin.Context) {
 }
 
 func (h *UserHandler) GetUserByID(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+	id, idErr := strconv.Atoi(c.Param("id"))
+	if idErr != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": errors.INVALID_ID})
 		return
 	}
-	user, err := h.UserService.GetUserByID(id)
-	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+	user, userErr := h.UserService.GetUserByID(id)
+	if userErr != nil {
+		c.JSON(500, gin.H{"error": userErr.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, user)
 }
 
 func (h *UserHandler) UpdateUser(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+	id, idErr := strconv.Atoi(c.Param("id"))
+	if idErr != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": errors.INVALID_ID})
 		return
 	}
 	var payload model.User
 
-	c.BindJSON(&payload)
+	payloadErr := c.BindJSON(&payload)
+	if payloadErr != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": errors.INVALID_REQUEST_BODY})
+		return
+	}
 
-	updatedUser, err := h.UserService.UpdateUser(id, payload)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	updatedUser, updatedUserErr := h.UserService.UpdateUser(id, payload)
+	if updatedUserErr != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": updatedUserErr.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, updatedUser)
@@ -82,7 +92,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 func (h *UserHandler) DeleteUser(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": errors.INVALID_ID})
 		return
 	}
 
@@ -92,51 +102,8 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusNoContent, nil)
+	c.JSON(http.StatusOK, nil)
 }
-
-// func Login(c *gin.Context) {
-// 	var body struct {
-// 		Email    string
-// 		Password string
-// 	}
-// 	c.BindJSON(&body)
-
-// 	var user model.User
-// 	result := initializer.PGDB.Where("email = ?", body.Email).First(&user)
-// 	if result.Error != nil {
-// 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
-// 		return
-// 	}
-
-// 	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password))
-// 	if err != nil {
-// 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
-// 		return
-// 	}
-
-// 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-// 		"sub": user.ID,
-// 		"exp": time.Now().Add(time.Hour * 24 * 30).Unix(),
-// 	})
-
-// 	tokenString, err := token.SignedString([]byte(os.Getenv("SECRET")))
-
-// 	if err != nil {
-// 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-// 		return
-// 	}
-
-// 	c.SetSameSite(http.SameSiteNoneMode)
-// 	c.SetCookie("Authorization", tokenString, 3600*24*30, "", "", false, true)
-// 	c.JSON(http.StatusOK, gin.H{"token": tokenString})
-// }
-
-// func Logout(c *gin.Context) {
-// 	c.SetSameSite(http.SameSiteNoneMode)
-// 	c.SetCookie("Authorization", "", -1, "", "", false, true)
-// 	c.JSON(http.StatusOK, gin.H{"message": "Logged out"})
-// }
 
 func NewUserHandler(userService service.UserService) *UserHandler {
 	return &UserHandler{

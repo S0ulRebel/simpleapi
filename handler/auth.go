@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"simple-api/errors"
 	"simple-api/service"
 
 	"github.com/gin-gonic/gin"
@@ -16,11 +17,17 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		Email    string
 		Password string
 	}
-	c.BindJSON(&body)
 
-	tokenString, err := h.AuthService.Login(body.Email, body.Password)
+	err := c.BindJSON(&body)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+		appErr := errors.NewErrorService().InternalServerError(err)
+		c.JSON(appErr.Code, gin.H{"error": appErr.Error()})
+		return
+	}
+
+	tokenString, tokenStringErr := h.AuthService.Login(body.Email, body.Password)
+	if tokenStringErr != nil {
+		c.JSON(tokenStringErr.Code, gin.H{"error": tokenStringErr.Error()})
 		return
 	}
 
