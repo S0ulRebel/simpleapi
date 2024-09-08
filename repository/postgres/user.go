@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"fmt"
 	"simple-api/errors"
 	"simple-api/initializer"
 	"simple-api/model"
@@ -26,9 +27,9 @@ func (r *PostgresUserRepository) GetUsers() ([]model.User, *errors.AppError) {
 	return users, nil
 }
 
-func (r *PostgresUserRepository) GetUserByID(id int) (model.User, *errors.AppError) {
+func (r *PostgresUserRepository) GetUserByID(id string) (model.User, *errors.AppError) {
 	var user model.User
-	result := initializer.PGDB.First(&user, id)
+	result := initializer.PGDB.Where("id = ?", id).First(&user)
 	if result.Error != nil {
 		return user, errors.NewErrorService().NotFound("User")
 	}
@@ -44,14 +45,16 @@ func (r *PostgresUserRepository) GetUserByEmail(email string) (model.User, *erro
 	return user, nil
 }
 
-func (r *PostgresUserRepository) UpdateUser(id int, updatedUser model.User) (model.User, *errors.AppError) {
+func (r *PostgresUserRepository) UpdateUser(id string, updatedUser model.User) (model.User, *errors.AppError) {
 	var user model.User
-	result := initializer.PGDB.First(&user, id)
+	result := initializer.PGDB.First(&user, "id = ?", id)
 	if result.Error != nil {
 		return user, errors.NewErrorService().NotFound("User")
 	}
 
-	result = initializer.PGDB.Model(&user).Updates(updatedUser)
+	updatedUser.ID = user.ID
+	fmt.Println(updatedUser)
+	result = initializer.PGDB.Model(&user).Updates(&updatedUser)
 	if result.Error != nil {
 		return user, errors.NewErrorService().InternalServerError(result.Error)
 	}
@@ -59,8 +62,8 @@ func (r *PostgresUserRepository) UpdateUser(id int, updatedUser model.User) (mod
 	return user, nil
 }
 
-func (r *PostgresUserRepository) DeleteUser(id int) *errors.AppError {
-	result := initializer.PGDB.Delete(&model.User{}, id)
+func (r *PostgresUserRepository) DeleteUser(id string) *errors.AppError {
+	result := initializer.PGDB.Where("id = ?", id).Delete(&model.User{})
 	if result.Error != nil {
 		return errors.NewErrorService().InternalServerError(result.Error)
 	}

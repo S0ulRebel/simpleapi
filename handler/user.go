@@ -1,11 +1,11 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"simple-api/errors"
 	"simple-api/model"
 	"simple-api/service"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -54,8 +54,8 @@ func (h *UserHandler) GetUsers(c *gin.Context) {
 }
 
 func (h *UserHandler) GetUserByID(c *gin.Context) {
-	id, idErr := strconv.Atoi(c.Param("id"))
-	if idErr != nil {
+	id := c.Param("id")
+	if id == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": errors.INVALID_ID})
 		return
 	}
@@ -68,8 +68,8 @@ func (h *UserHandler) GetUserByID(c *gin.Context) {
 }
 
 func (h *UserHandler) UpdateUser(c *gin.Context) {
-	id, idErr := strconv.Atoi(c.Param("id"))
-	if idErr != nil {
+	id := c.Param("id")
+	if id == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": errors.INVALID_ID})
 		return
 	}
@@ -80,7 +80,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": errors.INVALID_REQUEST_BODY})
 		return
 	}
-
+	fmt.Println(payload)
 	updatedUser, updatedUserErr := h.UserService.UpdateUser(id, payload)
 	if updatedUserErr != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": updatedUserErr.Error()})
@@ -90,8 +90,8 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 }
 
 func (h *UserHandler) DeleteUser(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
+	id := c.Param("id")
+	if id == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": errors.INVALID_ID})
 		return
 	}

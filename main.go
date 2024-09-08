@@ -12,21 +12,19 @@ import (
 )
 
 func init() {
-	fmt.Println("Starting the application...")
 	initializer.LoadEnvironmentVariables()
 	initializer.ConnectToDatabase()
-	initializer.SyncDatabase()
+	if os.Getenv("DB_TYPE") == "postgres" {
+		initializer.SyncDatabase()
+	}
 }
 
 func main() {
-	// Initialize gin router
 	router := gin.Default()
-	// Initialize services
 	services := service.NewServiceManager(os.Getenv("DB_TYPE"))
-	// Initialize handlers
 	handlers := handler.NewHandlerManager(*services)
-	// Register routes
 	route.RegisterRoutes(router, *handlers, *services)
+
 	err := router.Run(":8080")
 	if err != nil {
 		fmt.Println(err)

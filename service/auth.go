@@ -16,6 +16,7 @@ type AuthService struct {
 
 func (s AuthService) Login(email, password string) (string, *errors.AppError) {
 	user, appErr := s.UserRepo.GetUserByEmail(email)
+
 	if appErr != nil {
 		return "", errors.NewErrorService().Unauthorized(errors.INVALID_EMAIL_OR_PASSWORD)
 	}

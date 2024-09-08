@@ -72,7 +72,7 @@ func validateClaims(claims jwt.MapClaims) error {
 		return fmt.Errorf("Token expired")
 	}
 
-	_, ok = claims["ID"].(float64)
+	_, ok = claims["ID"].(string)
 	if !ok {
 		return fmt.Errorf("Error extracting ID claim")
 	}
@@ -81,9 +81,9 @@ func validateClaims(claims jwt.MapClaims) error {
 }
 
 func getUserByClaims(claims jwt.MapClaims, userService service.UserService) (model.User, *errors.AppError) {
-	id, ok := claims["ID"].(float64)
+	id, ok := claims["ID"].(string)
 	if !ok {
 		return model.User{}, errors.NewErrorService().Unauthorized("")
 	}
-	return userService.GetUserByID(int(id))
+	return userService.GetUserByID(id)
 }

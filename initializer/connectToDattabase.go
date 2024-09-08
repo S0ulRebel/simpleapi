@@ -1,28 +1,35 @@
 package initializer
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"simple-api/database"
 
+	"go.mongodb.org/mongo-driver/mongo"
 	"gorm.io/gorm"
 )
 
 var PGDB *gorm.DB
+var MGDB *mongo.Client
 
 func ConnectToDatabase() {
 	// Connect to database
 	databaseType := os.Getenv("DB_TYPE")
-	if databaseType != "postgres" {
+	switch databaseType {
+	case "postgres":
+		pgDB, err := database.ConnectToPostgres()
+		if err != nil {
+			log.Fatalf("Failed to connect to PostgreSQL: %v", err)
+		}
+		PGDB = pgDB
+	case "mongodb":
+		mgDB, err := database.ConnectToMongoDB()
+		if err != nil {
+			log.Fatalf("Failed to connect to MongoDB: %v", err)
+		}
+		MGDB = mgDB
+	default:
 		log.Fatalf("Invalid database type: %v", databaseType)
-	}
-	pgDB, err := database.ConnectToPostgres()
-	if err != nil {
-		log.Fatalf("Failed to connect to PostgreSQL: %v", err)
-	}
 
-	fmt.Println("Connected to PostgreSQL")
-	PGDB = pgDB
-
+	}
 }
