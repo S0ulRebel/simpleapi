@@ -6,6 +6,7 @@ import (
 	"simple-api/errors"
 	"simple-api/model"
 	"simple-api/service"
+	"simple-api/validation"
 
 	"github.com/gin-gonic/gin"
 )
@@ -34,6 +35,10 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 		LastName:  body.LastName,
 		Email:     body.Email,
 		Password:  body.Password,
+	}
+	if err := validation.Validate.Struct(user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": errors.INVALID_REQUEST_BODY})
+		return
 	}
 
 	createdUser, createdUserErr := h.UserService.CreateUser(user)
