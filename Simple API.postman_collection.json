@@ -187,6 +187,166 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "Posts",
+			"item": [
+				{
+					"name": "fetchAll",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{API_URL}}/posts",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"posts"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "fetchOne",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"title\": \"Title a\",\r\n    \"body\": \"Post body\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{API_URL}}/posts/2dd7ae3e-832d-49f3-b631-d7037e9668e1",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"posts",
+								"2dd7ae3e-832d-49f3-b631-d7037e9668e1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "fetchByUser",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"title\": \"Title a\",\r\n    \"body\": \"Post body\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{API_URL}}/posts/user/dbd6b01f-4a16-4f42-a5d3-36495de25c25",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"posts",
+								"user",
+								"dbd6b01f-4a16-4f42-a5d3-36495de25c25"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"title\": \"Title\",\r\n    \"body\": \"Post body\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{API_URL}}/posts",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"posts"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"title\": \"Title a\",\r\n    \"body\": \"Post body\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{API_URL}}/posts/6948ec43-f612-4e37-96f6-4f374b71acbd",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"posts",
+								"6948ec43-f612-4e37-96f6-4f374b71acbd"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{API_URL}}/posts/6948ec43-f612-4e37-96f6-4f374b71acbd",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"posts",
+								"6948ec43-f612-4e37-96f6-4f374b71acbd"
+							]
+						}
+					},
+					"response": []
+				}
+			]
 		}
 	]
 }
