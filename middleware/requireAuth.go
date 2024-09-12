@@ -44,6 +44,7 @@ func RequireAuth(userService service.UserService) gin.HandlerFunc {
 		}
 
 		c.Set("user", user)
+		c.Set("UserID", user.ID)
 		c.Next()
 	}
 }

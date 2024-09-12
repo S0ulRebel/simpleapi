@@ -2,18 +2,20 @@ package mongo
 
 import (
 	"context"
+	"os"
 	"simple-api/errors"
 	"simple-api/initializer"
 	"simple-api/model"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type MongoUserRepository struct {
 }
 
 func (r *MongoUserRepository) CreateUser(user model.User) (model.User, *errors.AppError) {
-	collection := initializer.MGDB.Database("admin").Collection("users")
+	collection := initializer.MGDB.Database(os.Getenv("MONGO_DB")).Collection("users")
 	_, err := collection.InsertOne(context.TODO(), user)
 	if err != nil {
 		return user, errors.NewErrorService().InternalServerError(err)
@@ -23,7 +25,7 @@ func (r *MongoUserRepository) CreateUser(user model.User) (model.User, *errors.A
 
 func (r *MongoUserRepository) GetUsers() ([]model.User, *errors.AppError) {
 	var users []model.User
-	collection := initializer.MGDB.Database("admin").Collection("users")
+	collection := initializer.MGDB.Database(os.Getenv("MONGO_DB")).Collection("users")
 	cursor, err := collection.Find(context.Background(), bson.D{})
 	if err != nil {
 		return users, errors.NewErrorService().InternalServerError(err)
@@ -41,7 +43,7 @@ func (r *MongoUserRepository) GetUsers() ([]model.User, *errors.AppError) {
 
 func (r *MongoUserRepository) GetUserByID(id string) (model.User, *errors.AppError) {
 	var user model.User
-	collection := initializer.MGDB.Database("admin").Collection("users")
+	collection := initializer.MGDB.Database(os.Getenv("MONGO_DB")).Collection("users")
 	err := collection.FindOne(context.Background(), bson.D{{"_id", id}}).Decode(&user)
 	if err != nil {
 		return user, errors.NewErrorService().NotFound("User")
@@ -51,7 +53,7 @@ func (r *MongoUserRepository) GetUserByID(id string) (model.User, *errors.AppErr
 
 func (r *MongoUserRepository) GetUserByEmail(email string) (model.User, *errors.AppError) {
 	var user model.User
-	collection := initializer.MGDB.Database("admin").Collection("users")
+	collection := initializer.MGDB.Database(os.Getenv("MONGO_DB")).Collection("users")
 	err := collection.FindOne(context.Background(), bson.D{{"email", email}}).Decode(&user)
 	if err != nil {
 		return user, errors.NewErrorService().NotFound("User")
@@ -60,9 +62,12 @@ func (r *MongoUserRepository) GetUserByEmail(email string) (model.User, *errors.
 }
 
 func (r *MongoUserRepository) UpdateUser(id string, updatedUser model.User) (model.User, *errors.AppError) {
+	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
+
 	var user model.User
-	collection := initializer.MGDB.Database("admin").Collection("users")
-	err := collection.FindOneAndUpdate(context.Background(), bson.D{{"_id", id}}, bson.D{{"$set", updatedUser}}).Decode(&user)
+	collection := initializer.MGDB.Database(os.Getenv("MONGO_DB")).Collection("users")
+
+	err := collection.FindOneAndUpdate(context.Background(), bson.D{{"_id", id}}, bson.D{{"$set", updatedUser}}, opts).Decode(&user)
 	if err != nil {
 		return user, errors.NewErrorService().InternalServerError(err)
 	}
@@ -70,7 +75,7 @@ func (r *MongoUserRepository) UpdateUser(id string, updatedUser model.User) (mod
 }
 
 func (r *MongoUserRepository) DeleteUser(id string) *errors.AppError {
-	collection := initializer.MGDB.Database("admin").Collection("users")
+	collection := initializer.MGDB.Database(os.Getenv("MONGO_DB")).Collection("users")
 	_, err := collection.DeleteOne(context.Background(), bson.D{{"_id", id}})
 	if err != nil {
 		return errors.NewErrorService().InternalServerError(err)

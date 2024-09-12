@@ -85,6 +85,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": errors.INVALID_REQUEST_BODY})
 		return
 	}
+	payload.ID = id
 	fmt.Println(payload)
 	updatedUser, updatedUserErr := h.UserService.UpdateUser(id, payload)
 	if updatedUserErr != nil {
