@@ -6,3 +6,5 @@ When you create a user and login you can fetch update and delete users (no compl
 You can then create posts.
 
 All operations except create user and login require you to be logged in.
+
+Postman collection provided in the project root.
