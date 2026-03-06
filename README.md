@@ -1,12 +1,69 @@
-You can switch database type in the .env file (postgres or mongodb)
+Overview
 
-Create user is basically registration and doesn't need login
+This project is a small REST API built with Go and Gin.
+It was originally created as a technical showcase during a hiring process.
 
-When you create a user and login you can fetch update and delete users (no complex verification or roles implemented as this is a test project)
-You can then create posts.
+Since most of the production code I have written is under NDA, this repository serves as a public example of how I structure backend services and APIs.
 
-All operations except create user and login require you to be logged in.
+Although the scope is intentionally simple, the project demonstrates:
 
-Wrote only a few unit tests for one service as it's not a real world project.
+layered architecture
 
-Postman collection provided in the project root.
+repository pattern for database abstraction
+
+authentication flow
+
+configurable database backend
+
+basic unit testing
+
+Technical Notes
+
+This was my first project using Go and the Gin framework, built under a short deadline as part of a technical assignment. Despite the small scope, I aimed to structure the code as I would a production backend.
+
+Key architectural decisions:
+
+Repository Pattern
+
+The API uses a repository abstraction to decouple business logic from the database implementation.
+
+This allows switching the database engine via configuration.
+
+Supported databases:
+
+PostgreSQL
+
+MongoDB
+
+The database type can be configured in the .env file.
+
+Authentication Flow
+
+Two endpoints are public:
+
+CreateUser – user registration
+
+Login
+
+All other endpoints require authentication.
+
+After authentication, users can:
+
+fetch users
+
+update users
+
+delete users
+
+create posts
+
+For simplicity (since this is a technical test), the project does not implement roles or complex permission systems.
+
+Testing
+
+A small set of unit tests is included for one service to demonstrate testing structure.
+Since this is a demo project rather than production code, test coverage is intentionally limited.
+
+API Testing
+
+A Postman collection is included in the project root for easier API testing.
